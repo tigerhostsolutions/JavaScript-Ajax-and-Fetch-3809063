@@ -67,10 +67,12 @@ const handleParkSuccess = (data) => {
 // };
 
 const zip9Interceptor = axios.interceptors.response.use((data) => {
-  const baseZip = data.data.results[0].address_components.zip;
-  const plus4 = data.data.results[0].fields.zip4.plus4[0];
-  console.log(baseZip + "-" + plus4);
-  data.zip9 = baseZip + "-" + plus4;
+  if (data.data.results) {
+    const baseZip = data.data.results[0].address_components.zip;
+    const plus4 = data.data.results[0].fields.zip4.plus4[0];
+    console.log(baseZip + "-" + plus4);
+    data.zip9 = baseZip + "-" + plus4;
+  }
   return data;
 });
 
