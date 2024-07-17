@@ -1,17 +1,14 @@
 'use strict';
 
-// const geocodioUrl = 'https://api.geocod.io/v1.7/geocode?q=1109+N+Highland+St%2C+Arlington+VA&fields=zip4&api_key=6685cecc728ce276c6e82c17278888218268186';
-
-// const geocodioBaseUrl = 'https://api.geocod.io/v1.7/geocode?q=';
-const geocodioBaseUrl = 'https://api.geocod.io/v1.7/geocode';
+const geocodioBaseUrl = 'https://api.geocod.io/v1.7/reverse';
 const geocodioApiKey = '6685cecc728ce276c6e82c17278888218268186'
 
-const npsUrl = 'https://developer.nps.gov/api/v1/park';
+const npsUrl = 'https://developer.nps.gov/api/v1/parks';
 const npsApiKey = 'CNJUTrcuXaoHqVeIxmB8d0GMVLQd0WfCU7zfThQK';
 const npsRequestParams = {
   'params': {
     'stateCode': 'CA',
-    'apikey': npsApiKey
+    'api_key': npsApiKey
   }
 };
 const npsFallback = {
@@ -140,7 +137,7 @@ let checkCompletion = () => {
           cityField.value + '+' + 
           stateField.value,
         'fields': 'zip4',
-        'api_key': geocodioApiKey
+        'apikey': geocodioApiKey
       }
     };
     createRequest(geocodioBaseUrl, handleGeocodioErrors, handleGeocodioSuccess, params);
