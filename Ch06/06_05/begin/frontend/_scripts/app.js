@@ -1,108 +1,157 @@
 'use strict';
 
-//const smartyUrl = 'https://us-street.api.smartystreets.com/street-address?auth-id=19785289899902913&candidates=10&street=86%20Frontage%20Road&city=Belmont&state=MA';
-const smartyApiKey = '19785289899902913'; // replace with your API key
-const smartyUrl = 'https://us-street.api.smartystreets.com/street-address?auth-id=' + smartyApiKey + '&candidates=10';
-const smartyInit = {
-  headers: {
-    'Content-Type': 'application/json',
-    Host: 'us-street.api.smartystreets.com',
-  },
+// const geocodioUrl = 'https://api.geocod.io/v1.7/geocode?q=1109+N+Highland+St%2C+Arlington+VA&fields=zip4&api_key=6685cecc728ce276c6e82c17278888218268186';
+
+// const geocodioBaseUrl = 'https://api.geocod.io/v1.7/geocode?q=';
+const geocodioBaseUrl = 'https://api.geocod.io/v1.7/geocode';
+const geocodioApiKey = '6685cecc728ce276c6e82c17278888218268186'
+
+const npsUrl = 'https://developer.nps.gov/api/v1/parks';
+const npsApiKey = 'CNJUTrcuXaoHqVeIxmB8d0GMVLQd0WfCU7zfThQK';
+const npsRequestParams = {
+  'params': {
+    'stateCode': 'CA',
+    'api_key': npsApiKey
+  }
 };
-const parksUrl = 'https://developer.nps.gov/api/v1/parks?stateCode=ca&api_key=7NPUhkm1jtqX7Muj86oafxkn0XLycFvDN8jwjWE1';
-const parksFallback = {
-  "description": "Alcatraz Island offers a close-up look at the site of the first lighthouse and US built fort on the West Coast, the infamous federal penitentiary long off-limits to the public, and the history making 18 month occupation by Indians of All Tribes. Rich in history, there is also a natural side to the Rock—gardens, tide pools, bird colonies, and bay views beyond compare.",
-  "fullName": "Alcatraz Island",
+const npsFallback = {
   "url": "https://www.nps.gov/alca/index.htm",
+  "fullName": "Alcatraz Island",
+  "description": "Alcatraz reveals stories of American incarceration, justice, and our common humanity. This small island was once a fort, a military prison, and a maximum security federal penitentiary. In 1969, the Indians of All Tribes occupied Alcatraz for 19 months in the name of freedom and Native American civil rights. We invite you to explore Alcatraz's complex history and natural beauty."
 };
+
 const addressField = document.querySelector('#address');
 const cityField = document.querySelector('#city');
 const stateField = document.querySelector('#state');
-//const $zipField = $('#zip');
+// const $zipField = $('#zip');
 const zipField = document.querySelector('#zip');
-const parkThumb = document.querySelector('#specials h2 img');
+
 const parkSection = document.querySelector('#specials');
+const parkThumb = document.querySelector('#specials h2 img');
 const parkName = document.querySelector('#specials h2 a');
 const parkDesc = document.querySelector('#specials p');
 
-const smartyUpdateUISuccess = function(parsedData) {
-//  const parsedData = JSON.parse(data);
-//  console.log(parsedData);
-  const zip = parsedData[0].components.zipcode;
-  const plus4 = parsedData[0].components.plus4_code;
-//  console.log(zip + '-' + plus4);
-  zipField.value = zip + '-' + plus4;
-};
-const parkUpdateUISuccess = function(parsedData) {
-  //const parsedData = JSON.parse(data);
-  console.log(parsedData);
-  const number = Math.floor(Math.random() * parsedData.data.length);
-  parkName.textContent = parsedData.data[number].fullName;
-  parkName.href = parsedData.data[number].url;
-  parkDesc.textContent = parsedData.data[number].description;
-  parkThumb.src = 'https://www.nps.gov/common/commonspot/templates/assetsCT/images/branding/logo.png';
-  parkSection.classList.remove('hidden');
-}
-const smartyUpdateUIError = function(error) {
-  console.log(error);
-};
-const parkUpdateUIError = function(error) {
-  console.log(error);
-  parkName.textContent = parksFallback.fullName;
-  parkName.href = parksFallback.url;
-  parkDesc.textContent = parksFallback.description;
-  parkThumb.src = 'https://www.nps.gov/common/commonspot/templates/assetsCT/images/branding/logo.png';
-  parkSection.classList.remove('hidden');
+// const handleGeocodioErrors = (response) => {
+//    if (response.ok) return response.json();
+//    return response.json()
+//      .then(response => {throw new Error(response.error.message || response.error)})
+// };
+
+const handleGeocodioErrors = (error) => {
+    if (error.response) {
+      console.log(error.response);
+    } else if (error.request) {
+      console.log(error.request);
+    } else {
+      console.log('Error: ', error.message);
+    }
+    console.log(error.config);
 };
 
-// const responseMethod = function(httpRequest, succeed, fail) {
-//   if (httpRequest.readyState === 4) {
-//     if (httpRequest.status === 200) {
-//       succeed(httpRequest.responseText);
-//     } else {
-//       fail(httpRequest.status + ': ' + httpRequest.responseText);
-//     }
+const handleParkErrors = (error) => {
+    parkThumb.src = '_images/nps_logo.svg';
+    parkName.textContent = npsFallback.fullName;
+    parkName.href = npsFallback.url;
+    parkDesc.textContent = npsFallback.description;
+    parkSection.classList.remove('hidden');
+    if (error.response) {
+      console.log(error.response);
+    } else if (error.request) {
+      console.log(error.request);
+    } else {
+      console.log('Error: ', error.message);
+    }
+    console.log(error.config);
+};
+
+const handleGeocodioSuccess = (data) => {
+  // console.log(data)
+  // const zip9 = data.data.results[0].fields.zip4.zip9[0];
+  // zipField.value = zip9;
+  zipField.value = data.zip9;
+};
+
+const handleParkSuccess = (data) => {
+  console.log(data);
+  parkThumb.src = '_images/nps_logo.svg';
+  parkName.textContent = data.parkInfo.parkName;
+  parkName.href = data.parkInfo.parkHref;
+  parkDesc.textContent = data.parkInfo.parkDesc;
+  parkSection.classList.remove('hidden');
+}
+
+// const createRequest = (url, errors, success) => {
+//   fetch(url)
+//     .then((response) => errors(response))
+//     .then((data) => success(data))
+//     .catch((error) => console.error(error))
+// };
+
+const zip9Interceptor = axios.interceptors.response.use((data) => {
+  if (data.data.results) { // Geocodio response
+    const baseZip = data.data.results[0].address_components.zip;
+    const plus4 = data.data.results[0].fields.zip4.plus4[0];
+    console.log(baseZip + "-" + plus4);
+    data.zip9 = baseZip + "-" + plus4;
+  } 
+  return data;
+});
+
+const parkInterceptor = axios.interceptors.response.use((data) => {
+  if (data.data.data) { // National Park Service response
+    const randNum = Math.floor(Math.random() * (data.data.data.length));
+    data.parkInfo = {
+      parkName: data.data.data[randNum].fullName,
+      parkHref: data.data.data[randNum].url,
+      parkDesc: data.data.data[randNum].description
+    };
+  } 
+  return data;
+});
+
+const createRequest = (url, errors, success, params) => {
+  axios.get(url, params)
+    // .then((response) => errors(response))
+    .then((data) => success(data))
+    .catch((error) => errors(error))
+}
+
+// let checkCompletion = () => {
+//   if (addressField.value !== '' &&
+//     cityField.value !== '' &&
+//     stateField.value !== '') {
+//     const requestUrl = geocodioBaseUrl + 
+//       addressField.value + '+' + 
+//       cityField.value + '+' + 
+//       stateField.value +
+//       '&fields=zip4' +
+//       '&api_key=' + geocodioApiKey;
+//     createRequest(requestUrl, handleGeocodioErrors, handleGeocodioSuccess);
 //   }
 // }
 
-// const createRequest = function(url, succeed, fail) {
-//   const httpRequest = new XMLHttpRequest(url);
-//   httpRequest.addEventListener('readystatechange', (url) => responseMethod(httpRequest, succeed, fail));
-//   httpRequest.open('GET', url);
-//   httpRequest.send();
-// };
-
-const handleErrors = function(response) {
-  if(!response.ok) {
-    throw new Error((response.status + ': ' + response.statusText));
-  }
-  return response.json();
-}
-
-const createRequest = function(url, succeed, fail, init) {
-  fetch(url, init)
-    .then((response) => handleErrors(response))
-    .then((data) => succeed(data))
-    .catch((error) => fail(error));
-};
-
-const checkCompletion = function() {
+let checkCompletion = () => {
   if (addressField.value !== '' &&
-      cityField.value !== '' &&
-      stateField.value !== '') {
-        const requestUrl = smartyUrl + 
-          '&street=' + addressField.value + 
-          '&city=' + cityField.value + 
-          '&state=' + stateField.value;
-        createRequest(requestUrl, smartyUpdateUISuccess, smartyUpdateUIError, smartyInit);
+    cityField.value !== '' &&
+    stateField.value !== '') {
+    const params = {
+      params: {
+        'q': addressField.value + '+' + 
+          cityField.value + '+' + 
+          stateField.value,
+        'fields': 'zip4',
+        'api_key': geocodioApiKey
       }
+    };
+    createRequest(geocodioBaseUrl, handleGeocodioErrors, handleGeocodioSuccess, params);
+  }
 }
-//createRequest(smartyUrl);
-//createRequest(parksUrl, parkUpdateUISuccess, parkUpdateUIError);
+
+// createRequest(geocodioUrl);
+window.addEventListener('DOMContentLoaded', () => {
+  createRequest(npsUrl, handleParkErrors, handleParkSuccess, npsRequestParams);
+});
 
 addressField.addEventListener('blur', checkCompletion);
 cityField.addEventListener('blur', checkCompletion);
 stateField.addEventListener('blur', checkCompletion);
-window.addEventListener('DOMContentLoaded', () => {
-  createRequest(parksUrl, parkUpdateUISuccess, parkUpdateUIError);
-})
